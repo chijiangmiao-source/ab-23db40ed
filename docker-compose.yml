@@ -1,0 +1,43 @@
+# 束线保护双链路编排
+#
+# 常用命令：
+#   HOST_PORT=8080 docker compose up --build      # 启动编排台
+#   docker compose run --rm verify                # 一键验收（业务结果+测试+构建检查+冒烟）
+#
+# 服务启动后健康入口经宿主机端口访问：
+#   http://localhost:${HOST_PORT:-8080}/health
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fiber-protect:latest
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "8000"
+    ports:
+      # 宿主机端口可由 .env / 环境变量 HOST_PORT 配置，默认 8080
+      - "${HOST_PORT:-8080}:8000"
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+             "import json,urllib.request,sys; r=urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=2); sys.exit(0 if json.load(r)=={'status':'ok'} else 1)"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+
+  verify:
+    image: fiber-protect:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      VERIFY_TARGET: "http://web:8000"
+    # 实际校验双路、共享瓶颈、割证据等业务结果，并运行代码测试、
+    # 构建检查与 API/HTTP 冒烟；全部结束后退出，退出码即验收结论。
+    command: ["python3", "scripts/verify.py"]
+    restart: "no"

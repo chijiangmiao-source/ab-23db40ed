@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>束线保护信号 · 双链路编排台</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>束线保护信号 · 双链路编排台</h1>
+    <p class="sub">在有向光纤网上求起点→终点两条<strong>边互不重复</strong>链路的全局最小总延迟（最小费用流精确解，非“最短路+删边”贪心）</p>
+  </header>
+
+  <main class="layout">
+    <!-- 左：录入 -->
+    <section class="panel" id="editor-panel">
+      <div class="panel-head">
+        <h2>网络录入</h2>
+        <div class="examples">
+          <label for="example-select">载入示例：</label>
+          <select id="example-select">
+            <option value="">— 请选择 —</option>
+            <option value="global">全局最优 vs 贪心反例（共享桥）</option>
+            <option value="cut">单路割瓶颈（无法双路）</option>
+            <option value="unreachable">终点不可达</option>
+            <option value="parallel">并行光纤双链路</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="endpoints">
+        <label>起点 source
+          <input type="text" id="source-input" value="S" />
+        </label>
+        <label>终点 sink
+          <input type="text" id="sink-input" value="T" />
+        </label>
+      </div>
+
+      <table class="fiber-table">
+        <thead>
+          <tr><th>#</th><th>段标识 id</th><th>起点</th><th>终点</th><th>非负整数延迟</th><th></th></tr>
+        </thead>
+        <tbody id="fiber-rows"></tbody>
+      </table>
+      <div class="row-actions">
+        <button type="button" id="add-row" class="btn ghost">＋ 增加光纤段</button>
+      </div>
+
+      <div class="submit-bar">
+        <button type="button" id="submit-btn" class="btn primary">提交求解</button>
+        <span id="submit-status" class="submit-status"></span>
+      </div>
+      <p class="hint">节点可重合；同一对端点允许并行光纤（按不同段标识分别计容）。延迟必须是非负整数。</p>
+    </section>
+
+    <!-- 右：结论 -->
+    <section class="panel" id="result-panel">
+      <div class="panel-head"><h2>求解结论</h2></div>
+
+      <div id="result-empty" class="placeholder">提交后在此展示两条完整链路，或双路不可行时的源侧节点集合与全部外出割边。</div>
+
+      <div id="result-success" class="hidden">
+        <div class="verdict ok">✔ 已求得边互不重复的两条完整链路（全局最优）</div>
+        <div id="routes" class="routes"></div>
+        <div class="total-box">
+          <span class="total-label">可复算最小总延迟：</span>
+          <span id="total-delay" class="total-value"></span>
+        </div>
+        <div id="greedy-box" class="greedy"></div>
+      </div>
+
+      <div id="result-infeasible" class="hidden">
+        <div class="verdict warn" id="infeasible-msg"></div>
+        <h3>源侧节点集合（残余网络中自起点可达）</h3>
+        <div id="source-side" class="node-chips"></div>
+        <h3>全部外出割边（横断双路的瓶颈证据，割容量 = 最大流）</h3>
+        <table class="cut-table">
+          <thead><tr><th>段标识</th><th>起点</th><th>终点</th><th>延迟</th></tr></thead>
+          <tbody id="cut-rows"></tbody>
+        </table>
+        <div id="greedy-box2" class="greedy"></div>
+      </div>
+
+      <div id="result-errors" class="hidden">
+        <div class="verdict err">✘ 输入校验失败，旧结论已清除。请按下列定位修正后重新提交：</div>
+        <ul id="error-list" class="error-list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/static/app.js"></script>
+</body>
+</html>

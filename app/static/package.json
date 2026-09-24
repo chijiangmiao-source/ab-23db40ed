@@ -1,0 +1,5 @@
+{
+  "type": "module",
+  "private": true,
+  "comment": "仅用于告知 Node 该目录下 .js 为 ESM（node --check / node --test）；浏览器通过 <script type=module> 加载。"
+}
